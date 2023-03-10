@@ -41,3 +41,115 @@ print(check_na_inf)
 
 
 ```
+
+```{r}
+#write a histogram function
+hist_func <- function(data, var,z,title) {
+  ggplot(data = data, mapping = 
+           aes(x = var)) +
+    geom_histogram(bins = z) +
+    scale_x_continuous(labels = scales::comma) +
+    theme_minimal() +
+    labs(title = title)
+}
+
+#test function x=data, y=variable, z=bins, title=title
+hist_func(data_clean, var = data_clean$total_civilian_non_institutional_population_in_state_area, 150, "Population in States")
+
+
+  
+```
+
+```{r}
+#select variables which are iteratable through hist_func function
+data_for_iterat <- data_clean %>%
+  select(5:11)
+
+#Lieber Lars, vielleicht hast du eine Idee, wie dieser Code funktionieren könnte, gibt keine Histogramme?
+for (var in 1:ncol(data_for_iterat)) {
+  hist_func(data_for_iterat,var,200,"Var")
+}
+```
+
+```{r echo=FALSE}
+
+
+#alternative from stackoverflow
+op <- par(mfrow=c(4, 2))  # to put histograms side by side
+lapply(seq(data_for_iterat), function(x) 
+  hist(x=data_for_iterat[[x]], xlab=names(data_for_iterat)[x], main=paste("Histogram", names(data_for_iterat)[x]), breaks = 200))
+par(op)  # restore
+```
+
+```{r}
+#alternative Lösung: facet wrap, aber Schwierigkeiten mit bins
+
+df_long <- gather(data_for_iterat, key ="name", value = "value") %>% 
+  as.data.frame()
+
+ggplot(df_long) +
+  geom_histogram(aes(value), bins = 40) +
+  facet_wrap(~name, ncol = 2) +
+  theme_minimal()
+```
+
+## EDA
+
+```{r}
+data_grouped_by_year_state <- data_clean %>% 
+  group_by(year, state_area) %>% 
+  summarise(`Total non-institutional Population (USA)` = sum(total_civilian_non_institutional_population_in_state_area),
+            `Total Civilian Labor Force (USA)` = sum(total_civilian_labor_force_in_state_area),
+            `Total Employment in USA` = sum(total_employment_in_state_area)
+            )
+
+data_grouped_by_year_state <- data_grouped_by_year_state %>% 
+  mutate(`Percentage of Civilian Labor Force (USA)` =  (`Total Civilian Labor Force (USA)`/`Total non-institutional Population (USA)`)*100,
+         `Percentage of Employment in USA` = (`Total Employment in USA`/`Total non-institutional Population (USA)`)*100,
+         `Percentage of Unemployment in USA` = ((`Total Civilian Labor Force (USA)`-`Total Employment in USA`)/`Total non-institutional Population (USA)`)*100
+    
+  )
+            
+data_nat <- data_clean %>% 
+  group_by(year) %>% 
+  summarise(`Total non-institutional Population (USA)` = sum(total_civilian_non_institutional_population_in_state_area),
+            `Total Civilian Labor Force (USA)` = sum(total_civilian_labor_force_in_state_area),
+            `Total Employment in USA` = sum(total_employment_in_state_area)
+            )
+
+data_nat <- data_nat %>% 
+  mutate(`Percentage of Civilian Labor Force (USA)` =  (`Total Civilian Labor Force (USA)`/`Total non-institutional Population (USA)`)*100,
+         `Percentage of Employment in USA` = (`Total Employment in USA`/`Total non-institutional Population (USA)`)*100,
+         `Percentage of Unemployment in USA` = ((`Total Civilian Labor Force (USA)`-`Total Employment in USA`)/`Total non-institutional Population (USA)`)*100
+    
+  )
+
+
+
+```
+
+```{r fig.width=6, fig.asp=0.618}
+data_nat %>%
+  ggplot(aes(x=year, y = `Percentage of Unemployment in USA`)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Percentage of Unemployment (USA)", subtitle = "From 1976 - 2022", x = "Year", y = "Percentage of Unemployment")
+```
+
+
+
+
+```{r fig.width=6, fig.height= 20}
+data_grouped_by_year_state %>%
+  filter(year==2022) %>%
+  arrange(desc(`Total non-institutional Population (USA)`)) %>% 
+  ggplot(aes(x= fct_reorder(state_area, `Total non-institutional Population (USA)`), y=`Total non-institutional Population (USA)`, fill = `Percentage of Unemployment in USA`)) +
+  coord_flip()+
+  geom_col() +
+  theme_minimal()
+```
+
+
+
+
+
