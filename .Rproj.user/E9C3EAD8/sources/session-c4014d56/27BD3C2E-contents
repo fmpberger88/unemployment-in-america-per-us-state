@@ -20,7 +20,9 @@ This dataset contains relevant statistics and employment rates per US state sinc
 
 Data is availabe at: [Kaggle](https://www.kaggle.com/datasets/justin2028/unemployment-in-america-per-us-state?resource=download)
 
-```{r cars}
+According to the description on the website, the dataset from *Kaggle* does not contain any missing values. The data was briefly checked for any missing and infinitive values.
+
+```{r loading}
 #load packages
 library(tidyverse)
 library(janitor)
@@ -32,6 +34,10 @@ glimpse(data)
 
 #clean names/whitespaces
 data_clean <- clean_names(data)
+
+#check for any NA and infite values
+check_na_inf <- apply(data_clean, 2, function(x) any(is.na(x) | is.infinite(x)))
+print(check_na_inf)
 
 
 ```
