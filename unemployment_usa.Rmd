@@ -26,6 +26,9 @@ According to the description on the website, the dataset from *Kaggle* does not 
 #load packages
 library(tidyverse)
 library(janitor)
+library(ggridges)
+library(viridis)
+library(hrbrthemes)
 
 #load data from 
 data <- read_csv('Unemp_usa.csv')
@@ -109,15 +112,32 @@ data_grouped_by_year_state <- data_grouped_by_year_state %>%
          `Percentage of Unemployment in USA` = ((`Total Civilian Labor Force (USA)`-`Total Employment in USA`)/`Total non-institutional Population (USA)`)*100
     
   )
+
+data_grouped_by_month <- data_clean %>% 
+  group_by(year,month) %>% 
+  summarise(`Total non-institutional Population (USA)` = sum(total_civilian_non_institutional_population_in_state_area),
+            `Total Civilian Labor Force (USA)` = sum(total_civilian_labor_force_in_state_area),
+            `Total Employment in USA` = sum(total_employment_in_state_area)
+            )
+
+data_grouped_by_month <- data_grouped_by_month %>% 
+  mutate(`Percentage of Civilian Labor Force (USA)` =  (`Total Civilian Labor Force (USA)`/`Total non-institutional Population (USA)`)*100,
+         `Percentage of Employment in USA` = (`Total Employment in USA`/`Total non-institutional Population (USA)`)*100,
+         `Percentage of Unemployment in USA` = ((`Total Civilian Labor Force (USA)`-`Total Employment in USA`)/`Total non-institutional Population (USA)`)*100
+    
+  )
+
+
+
             
-data_nat <- data_clean %>% 
+data_nat_year <- data_clean %>% 
   group_by(year) %>% 
   summarise(`Total non-institutional Population (USA)` = sum(total_civilian_non_institutional_population_in_state_area),
             `Total Civilian Labor Force (USA)` = sum(total_civilian_labor_force_in_state_area),
             `Total Employment in USA` = sum(total_employment_in_state_area)
             )
 
-data_nat <- data_nat %>% 
+data_nat_year <- data_nat_year %>% 
   mutate(`Percentage of Civilian Labor Force (USA)` =  (`Total Civilian Labor Force (USA)`/`Total non-institutional Population (USA)`)*100,
          `Percentage of Employment in USA` = (`Total Employment in USA`/`Total non-institutional Population (USA)`)*100,
          `Percentage of Unemployment in USA` = ((`Total Civilian Labor Force (USA)`-`Total Employment in USA`)/`Total non-institutional Population (USA)`)*100
@@ -129,14 +149,49 @@ data_nat <- data_nat %>%
 ```
 
 ```{r fig.width=6, fig.asp=0.618}
-data_nat %>%
+data_nat_year %>%
   ggplot(aes(x=year, y = `Percentage of Unemployment in USA`)) +
-  geom_line() +
+  geom_line(color="steelblue") +
+  geom_point() +
   theme_minimal() +
   labs(title = "Percentage of Unemployment (USA)", subtitle = "From 1976 - 2022", x = "Year", y = "Percentage of Unemployment")
 ```
 
-
+```{r fig.width=6, fig.asp=0.618}
+data_grouped_by_month %>%
+  ggplot(aes(x=month, y = `Percentage of Unemployment in USA`)) +
+  geom_violin(fill = "steelblue")+
+  geom_boxplot(fill = "pink") +
+  theme_minimal() +
+  labs(title = "Percentage of Unemployment (USA)", subtitle = "From 1976 - 2022", x = "Month", y = "Percentage of Unemployment")
+```
+```{r fig.width=6, fig.asp=0.618}
+data_grouped_by_month %>%
+  ggplot(aes(x = `Percentage of Unemployment in USA`, y = month, fill = ..x..)) +
+  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+  scale_fill_viridis(option = "C") +
+  labs(title = 'Percentage of Unemployment by month', subtitle = "From 1976 - 2022") +
+  theme_ipsum() +
+    theme(
+      legend.position="none",
+      panel.spacing = unit(0.1, "lines"),
+      strip.text.x = element_text(size = 8)
+    )
+```
+```{r fig.width=6, fig.asp=0.618}
+data_grouped_by_month %>%
+  ggplot(aes(x = `Percentage of Unemployment in USA`, y = month, fill = month)) +
+  geom_density_ridges(alpha = 0.8) +
+  theme_ridges() + 
+  theme(legend.position = "none")
+```
+```{r fig.width=6, fig.height=20}
+data_grouped_by_year_state %>% 
+  ggplot(aes(x = `Percentage of Unemployment in USA`, y = state_area, fill = state_area)) +
+  geom_density_ridges(alpha = 0.8) +
+  theme_ridges() + 
+  theme(legend.position = "none")
+```
 
 
 ```{r fig.width=6, fig.height= 20}

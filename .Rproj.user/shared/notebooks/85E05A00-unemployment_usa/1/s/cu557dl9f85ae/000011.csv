@@ -1,6 +1,9 @@
 "0","#load packages"
 "0","library(tidyverse)"
 "0","library(janitor)"
+"0","library(ggridges)"
+"0","library(viridis)"
+"0","library(hrbrthemes)"
 "0",""
 "0","#load data from "
 "0","data <- read_csv('Unemp_usa.csv')"
@@ -14,17 +17,17 @@
 "1",""
 "1","
 "
-"1","$ `FIPS Code`                                                 [3m[38;5;246m<chr>[39m[23m ""01"", ""02"", ""04"", ""05"",…
-$ `State/Area`                                                [3m[38;5;246m<chr>[39m[23m ""Alabama"", ""Alaska"", ""A…
-$ Year                                                        [3m[38;5;246m<dbl>[39m[23m 1976, 1976, 1976, 1976,…
-$ Month                                                       [3m[38;5;246m<chr>[39m[23m ""01"", ""01"", ""01"", ""01"",…
-$ `Total Civilian Non-Institutional Population in State/Area` [3m[38;5;246m<dbl>[39m[23m 2605000, 232000, 162100…
-$ `Total Civilian Labor Force in State/Area`                  [3m[38;5;246m<dbl>[39m[23m 1484555, 160183, 964120…
-$ `Percent (%) of State/Area's Population`                    [3m[38;5;246m<dbl>[39m[23m 57.0, 69.0, 59.5, 57.9,…
-$ `Total Employment in State/Area`                            [3m[38;5;246m<dbl>[39m[23m 1386023, 148820, 865871…
-$ `Percent (%) of Labor Force Employed in State/Area`         [3m[38;5;246m<dbl>[39m[23m 53.2, 64.1, 53.4, 53.7,…
-$ `Total Unemployment in State/Area`                          [3m[38;5;246m<dbl>[39m[23m 98532, 11363, 98249, 64…
-$ `Percent (%) of Labor Force Unemployed in State/Area`       [3m[38;5;246m<dbl>[39m[23m 6.6, 7.1, 10.2, 7.3, 9.…"
+"1","$ `FIPS Code`                                                 [3m[38;5;246m<chr>[39m[23m ""01"", ""02"", ""04"", ""05"", ""06"", ""037"", ""08"", ""09"", ""10"", ""11"", ""12"", ""13"", ""15"", ""16"", ""17"", ""18"", ""19"", ""20"", ""21"", ""…
+$ `State/Area`                                                [3m[38;5;246m<chr>[39m[23m ""Alabama"", ""Alaska"", ""Arizona"", ""Arkansas"", ""California"", ""Los Angeles County"", ""Colorado"", ""Connecticut"", ""Delaware…
+$ Year                                                        [3m[38;5;246m<dbl>[39m[23m 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 19…
+$ Month                                                       [3m[38;5;246m<chr>[39m[23m ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""01"", ""0…
+$ `Total Civilian Non-Institutional Population in State/Area` [3m[38;5;246m<dbl>[39m[23m 2605000, 232000, 1621000, 1536000, 15621000, 5273000, 1832000, 2248000, 417000, 520000, 6421000, 3522000, 583000, 58…
+$ `Total Civilian Labor Force in State/Area`                  [3m[38;5;246m<dbl>[39m[23m 1484555, 160183, 964120, 889044, 9774280, 3381856, 1230966, 1442847, 261418, 334691, 3584876, 2244770, 407457, 36560…
+$ `Percent (%) of State/Area's Population`                    [3m[38;5;246m<dbl>[39m[23m 57.0, 69.0, 59.5, 57.9, 62.6, 64.1, 67.2, 64.2, 62.7, 64.4, 55.8, 63.7, 69.9, 63.0, 63.0, 64.0, 64.4, 65.1, 60.5, 56…
+$ `Total Employment in State/Area`                            [3m[38;5;246m<dbl>[39m[23m 1386023, 148820, 865871, 824395, 8875685, 3081806, 1160104, 1301974, 240543, 305677, 3238460, 2056467, 367586, 34518…
+$ `Percent (%) of Labor Force Employed in State/Area`         [3m[38;5;246m<dbl>[39m[23m 53.2, 64.1, 53.4, 53.7, 56.8, 58.4, 63.3, 57.9, 57.7, 58.8, 50.4, 58.4, 63.1, 59.5, 58.9, 59.8, 61.6, 62.4, 57.0, 53…
+$ `Total Unemployment in State/Area`                          [3m[38;5;246m<dbl>[39m[23m 98532, 11363, 98249, 64649, 898595, 300050, 70862, 140873, 20875, 29014, 346416, 188303, 39871, 20424, 337194, 15949…
+$ `Percent (%) of Labor Force Unemployed in State/Area`       [3m[38;5;246m<dbl>[39m[23m 6.6, 7.1, 10.2, 7.3, 9.2, 8.9, 5.8, 9.8, 8.0, 8.7, 9.7, 8.4, 9.8, 5.6, 6.6, 6.6, 4.3, 4.2, 5.6, 6.3, 8.7, 6.4, 10.5,…"
 "1",""
 "1","
 "
@@ -35,68 +38,40 @@ $ `Percent (%) of Labor Force Unemployed in State/Area`       [3m[38;5;246m<db
 "0","check_na_inf <- apply(data_clean, 2, function(x) any(is.na(x) | is.infinite(x)))"
 "0","print(check_na_inf)"
 "1","                                                fips_code "
-"1","
-"
-"1","                                                    FALSE "
-"1","
-"
 "1","                                               state_area "
-"1","
-"
-"1","                                                    FALSE "
-"1","
-"
 "1","                                                     year "
 "1","
 "
 "1","                                                    FALSE "
+"1","                                                    FALSE "
+"1","                                                    FALSE "
 "1","
 "
 "1","                                                    month "
-"1","
-"
-"1","                                                    FALSE "
-"1","
-"
 "1","total_civilian_non_institutional_population_in_state_area "
-"1","
-"
-"1","                                                    FALSE "
-"1","
-"
 "1","                 total_civilian_labor_force_in_state_area "
 "1","
 "
 "1","                                                    FALSE "
+"1","                                                    FALSE "
+"1","                                                    FALSE "
 "1","
 "
 "1","                percent_percent_of_state_areas_population "
-"1","
-"
-"1","                                                    FALSE "
-"1","
-"
 "1","                           total_employment_in_state_area "
-"1","
-"
-"1","                                                    FALSE "
-"1","
-"
 "1","    percent_percent_of_labor_force_employed_in_state_area "
 "1","
 "
 "1","                                                    FALSE "
-"1","
-"
-"1","                         total_unemployment_in_state_area "
-"1","
-"
+"1","                                                    FALSE "
 "1","                                                    FALSE "
 "1","
 "
+"1","                         total_unemployment_in_state_area "
 "1","  percent_percent_of_labor_force_unemployed_in_state_area "
 "1","
 "
+"1","                                                    FALSE "
 "1","                                                    FALSE "
 "1","
 "

@@ -1,0 +1,5 @@
+"0","data_grouped_by_month %>%"
+"0","  ggplot(aes(x = `Percentage of Unemployment in USA`, y = month, fill = month)) +"
+"0","  geom_density_ridges(alpha = 0.8) +"
+"0","  theme_ridges() + "
+"0","  theme(legend.position = ""none"")"

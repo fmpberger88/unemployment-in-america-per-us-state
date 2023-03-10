@@ -1,5 +1,6 @@
 "0","data_nat %>%"
 "0","  ggplot(aes(x=year, y = `Percentage of Unemployment in USA`)) +"
-"0","  geom_line() +"
+"0","  geom_line(color=""steelblue"") +"
+"0","  geom_point() +"
 "0","  theme_minimal() +"
 "0","  labs(title = ""Percentage of Unemployment (USA)"", subtitle = ""From 1976 - 2022"", x = ""Year"", y = ""Percentage of Unemployment"")"
