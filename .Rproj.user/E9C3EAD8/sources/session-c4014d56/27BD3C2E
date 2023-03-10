@@ -1,11 +1,11 @@
 {
     "id": "27BD3C2E",
-    "path": "~/R/rprojects/unemploym_usa/unemployment_usa.Rmd",
+    "path": "C:/Users/fmpbe/OneDrive/Documents/R/rprojects/unemploym_usa/unemployment_usa.Rmd",
     "project_path": "unemployment_usa.Rmd",
     "type": "r_markdown",
-    "hash": "0",
+    "hash": "3863797606",
     "contents": "",
-    "dirty": true,
+    "dirty": false,
     "created": 1678476698515.0,
     "source_on_save": false,
     "relative_order": 1,
@@ -23,11 +23,11 @@
         "rmdVisualModeLocation": "2461:2778"
     },
     "folds": "",
-    "lastKnownWriteTime": 1678489208,
+    "lastKnownWriteTime": 1678489711,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1678489612816,
+    "last_content_update": 1678489711323,
     "read_only": false,
     "read_only_alternatives": []
 }
