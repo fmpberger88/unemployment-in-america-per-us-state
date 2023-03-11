@@ -1,7 +1,0 @@
-"0","data_grouped_by_year_state %>%"
-"0","  filter(year==2022) %>%"
-"0","  arrange(desc(`Total non-institutional Population (USA)`)) %>% "
-"0","  ggplot(aes(x= fct_reorder(state_area, `Total non-institutional Population (USA)`), y=`Total non-institutional Population (USA)`, fill = `Percentage of Unemployment in USA`)) +"
-"0","  coord_flip()+"
-"0","  geom_col() +"
-"0","  theme_minimal()"

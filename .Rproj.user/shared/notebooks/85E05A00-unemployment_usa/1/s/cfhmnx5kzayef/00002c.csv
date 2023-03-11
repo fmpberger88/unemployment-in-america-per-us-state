@@ -1,6 +1,0 @@
-"0","data_grouped_by_month %>%"
-"0","  ggplot(aes(x=month, y = `Percentage of Unemployment in USA`)) +"
-"0","  geom_violin(fill = ""steelblue"")+"
-"0","  geom_boxplot(fill = ""pink"") +"
-"0","  theme_minimal() +"
-"0","  labs(title = ""Percentage of Unemployment (USA)"", subtitle = ""From 1976 - 2022"", x = ""Month"", y = ""Percentage of Unemployment"")"

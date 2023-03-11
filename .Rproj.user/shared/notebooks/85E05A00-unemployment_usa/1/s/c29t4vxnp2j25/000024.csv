@@ -1,5 +1,0 @@
-"0","data_grouped_by_year_state %>% "
-"0","  ggplot(aes(x= `Percentage of Unemployment in USA`, y = fct_reorder(state_area, `Percentage of Unemployment in USA`), fill = state_area)) +"
-"0","  geom_density_ridges(alpha = 0.8) +"
-"0","  theme_ridges() + "
-"0","  theme(legend.position = ""none"")"

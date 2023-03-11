@@ -1,8 +1,0 @@
-"0","#select variables which are iteratable through hist_func function"
-"0","data_for_iterat <- data_clean %>%"
-"0","  select(5:11)"
-"0",""
-"0","#Lieber Lars, vielleicht hast du eine Idee, wie dieser Code funktionieren könnte, gibt keine Histogramme?"
-"0","for (var in 1:ncol(data_for_iterat)) {"
-"0","  hist_func(data_for_iterat,var,200,""Var"")"
-"0","}"

@@ -7,7 +7,7 @@ output:
     toc: true
     toc_float: true
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -29,9 +29,21 @@ library(janitor)
 library(ggridges)
 library(viridis)
 library(hrbrthemes)
+library(ggiraph)
+library(usmap)
+library(psych)
+library(kableExtra)
+
+library(cluster)
+library(factoextra)
+library(proxyC)
+
+library(broom)
 
 #load data from 
 data <- read_csv('Unemp_usa.csv')
+county_demo_18 <-read_csv('ACSST5Y2018.S0101-Data.csv')
+
 
 glimpse(data)
 
@@ -63,44 +75,12 @@ hist_func(data_clean, var = data_clean$total_civilian_non_institutional_populati
   
 ```
 
-```{r}
-#select variables which are iteratable through hist_func function
-data_for_iterat <- data_clean %>%
-  select(5:11)
-
-#Lieber Lars, vielleicht hast du eine Idee, wie dieser Code funktionieren könnte, gibt keine Histogramme?
-for (var in 1:ncol(data_for_iterat)) {
-  hist_func(data_for_iterat,var,200,"Var")
-}
-```
-
-```{r echo=FALSE}
-
-
-#alternative from stackoverflow
-op <- par(mfrow=c(4, 2))  # to put histograms side by side
-lapply(seq(data_for_iterat), function(x) 
-  hist(x=data_for_iterat[[x]], xlab=names(data_for_iterat)[x], main=paste("Histogram", names(data_for_iterat)[x]), breaks = 200))
-par(op)  # restore
-```
-
-```{r}
-#alternative Lösung: facet wrap, aber Schwierigkeiten mit bins
-
-df_long <- gather(data_for_iterat, key ="name", value = "value") %>% 
-  as.data.frame()
-
-ggplot(df_long) +
-  geom_histogram(aes(value), bins = 40) +
-  facet_wrap(~name, ncol = 2) +
-  theme_minimal()
-```
 
 ## EDA
 
 ```{r}
 data_grouped_by_year_state <- data_clean %>% 
-  group_by(year, state_area) %>% 
+  group_by(year,state_area) %>%
   summarise(`Total non-institutional Population (USA)` = sum(total_civilian_non_institutional_population_in_state_area),
             `Total Civilian Labor Force (USA)` = sum(total_civilian_labor_force_in_state_area),
             `Total Employment in USA` = sum(total_employment_in_state_area)
@@ -110,22 +90,8 @@ data_grouped_by_year_state <- data_grouped_by_year_state %>%
   mutate(`Percentage of Civilian Labor Force (USA)` =  (`Total Civilian Labor Force (USA)`/`Total non-institutional Population (USA)`)*100,
          `Percentage of Employment in USA` = (`Total Employment in USA`/`Total non-institutional Population (USA)`)*100,
          `Percentage of Unemployment in USA` = ((`Total Civilian Labor Force (USA)`-`Total Employment in USA`)/`Total non-institutional Population (USA)`)*100
-    
   )
 
-data_grouped_by_month <- data_clean %>% 
-  group_by(year,month) %>% 
-  summarise(`Total non-institutional Population (USA)` = sum(total_civilian_non_institutional_population_in_state_area),
-            `Total Civilian Labor Force (USA)` = sum(total_civilian_labor_force_in_state_area),
-            `Total Employment in USA` = sum(total_employment_in_state_area)
-            )
-
-data_grouped_by_month <- data_grouped_by_month %>% 
-  mutate(`Percentage of Civilian Labor Force (USA)` =  (`Total Civilian Labor Force (USA)`/`Total non-institutional Population (USA)`)*100,
-         `Percentage of Employment in USA` = (`Total Employment in USA`/`Total non-institutional Population (USA)`)*100,
-         `Percentage of Unemployment in USA` = ((`Total Civilian Labor Force (USA)`-`Total Employment in USA`)/`Total non-institutional Population (USA)`)*100
-    
-  )
 
 
 
@@ -148,6 +114,8 @@ data_nat_year <- data_nat_year %>%
 
 ```
 
+
+
 ```{r fig.width=6, fig.asp=0.618}
 data_nat_year %>%
   ggplot(aes(x=year, y = `Percentage of Unemployment in USA`)) +
@@ -158,53 +126,172 @@ data_nat_year %>%
 ```
 
 ```{r fig.width=6, fig.asp=0.618}
-data_grouped_by_month %>%
-  ggplot(aes(x=month, y = `Percentage of Unemployment in USA`)) +
-  geom_violin(fill = "steelblue")+
+data_clean %>%
+  ggplot(aes(x=month, y = percent_percent_of_labor_force_unemployed_in_state_area)) +
+  #geom_violin(fill = "steelblue")+
   geom_boxplot(fill = "pink") +
   theme_minimal() +
   labs(title = "Percentage of Unemployment (USA)", subtitle = "From 1976 - 2022", x = "Month", y = "Percentage of Unemployment")
 ```
-```{r fig.width=6, fig.asp=0.618}
-data_grouped_by_month %>%
-  ggplot(aes(x = `Percentage of Unemployment in USA`, y = month, fill = ..x..)) +
-  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
-  scale_fill_viridis(option = "C") +
-  labs(title = 'Percentage of Unemployment by month', subtitle = "From 1976 - 2022") +
-  theme_ipsum() +
-    theme(
-      legend.position="none",
-      panel.spacing = unit(0.1, "lines"),
-      strip.text.x = element_text(size = 8)
-    )
+
+After the boxplot, we are going to eliminate outliners > 12
+```{r}
+data_clean <- data_clean %>% 
+  filter(percent_percent_of_labor_force_unemployed_in_state_area <12)
 ```
+
+
+
 ```{r fig.width=6, fig.asp=0.618}
-data_grouped_by_month %>%
-  ggplot(aes(x = `Percentage of Unemployment in USA`, y = month, fill = month)) +
+data_clean %>%
+  ggplot(aes(x = percent_percent_of_labor_force_unemployed_in_state_area, y = month, fill = month)) +
   geom_density_ridges(alpha = 0.8) +
   theme_ridges() + 
   theme(legend.position = "none")
 ```
+
 ```{r fig.width=12, fig.height=20}
-data_grouped_by_year_state %>% 
-  ggplot(aes(x= `Percentage of Unemployment in USA`, y = fct_reorder(state_area, `Percentage of Unemployment in USA`), fill = state_area)) +
+data_clean %>% 
+  ggplot(aes(x= percent_percent_of_labor_force_unemployed_in_state_area, y = fct_reorder(state_area, percent_percent_of_labor_force_unemployed_in_state_area), fill = state_area)) +
   geom_density_ridges(alpha = 0.8) +
   theme_ridges() + 
   theme(legend.position = "none")
 ```
 
 
-```{r fig.width=6, fig.height= 20}
-data_grouped_by_year_state %>%
-  filter(year==2022) %>%
-  arrange(desc(`Total non-institutional Population (USA)`)) %>% 
-  ggplot(aes(x= fct_reorder(state_area, `Total non-institutional Population (USA)`), y=`Total non-institutional Population (USA)`, fill = `Percentage of Unemployment in USA`)) +
-  coord_flip()+
-  geom_col() +
-  theme_minimal()
+```{r fig.width=12, fig.height= 12}
+data_clean %>%
+  ggplot(aes(x = year, y = fct_reorder(state_area, percent_percent_of_labor_force_unemployed_in_state_area), fill = percent_percent_of_labor_force_unemployed_in_state_area)) +
+  geom_tile_interactive(hover_nearest = TRUE) +
+  scale_fill_viridis_c_interactive() +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        axis.text = element_text(size = 20))
+
+
+```
+
+```{r eval=FALSE, include=FALSE}
+us_map <- us_map()
+
+data_grouped_by_year_state_2022 <- data_grouped_by_year_state %>% 
+  filter(year==2022)
+
+us_map_new <- us_map %>% 
+  full_join(data_grouped_by_year_state_2022, by = "fips")
+```
+
+```{r eval=FALSE, include=FALSE}
+shape_f <- sf::st_read("s_22mr22.shp")
+
+#Joining der Mietzins-Datensatzes (mietzins) mit Geo-Informationsdaten (shape)
+#shape <- left_join(shape_f, data_grouped_by_year_state_2022, by="BFS")
+```
+
+
+```{r eval=FALSE, include=FALSE}
+library(usmap)
+library(ggplot2)
+
+
+
+#data_grouped_by_year_state$fips <- as.numeric(data_grouped_by_year_state$fips) #convert to numeric
+us_map_new %>% 
+plot_usmap() + 
+  scale_fill_continuous(label = scales::comma) + 
+  theme(legend.position = "right")
+```
+
+```{r eval=FALSE, include=FALSE}
+p <- us_map_new %>% 
+  ggplot(aes(fill = `Percentage of Unemployment in USA`))+
+  geom_sf_interactive(aes(data_id = state, 
+                          tooltip = state, hover_nearest = TRUE 
+                          , 
+                      size = 3))+
+  theme_minimal() +
+  labs(title = "Mietzinsregionen im Kanton Zürich", subtitle = "Klicken Sie auf Ihre Gemeinde, um an Ihre zuständige Durchführungsstelle zu gelangen", caption = "KSA - Sozialverischerungen") +
+  scale_fill_manual(values = c("#33a02c", "#1f78b4", "#b2df8a"))
+
+# Konvertieren der ggplot-Karte in eine htmlwidgets-Objekt 
+#css_default_hover <- girafe_css_bicolor(primary = "yellow", #secondary = "red")
+
+set_girafe_defaults(
+  opts_hover = opts_hover(css = ),
+  opts_zoom = opts_zoom(min = 1, max = 4),
+  opts_tooltip = opts_tooltip(css = "padding:3px;background-color:#333333;color:white;"),
+  opts_sizing = opts_sizing(rescale = TRUE),
+  opts_toolbar = opts_toolbar(saveaspng = TRUE, position = "bottom", delay_mouseout = 4000)
+)
+
+girafe(ggobj = p) %>%
+  girafe_options(opts_hover(css = "fill:red;"))
+```
+
+
+```{r}
+hist_func(data_clean, var = data_clean$percent_percent_of_labor_force_unemployed_in_state_area, 150, "Percentage of Unemployment in USA")
 ```
 
 
 
+```{r}
+one_way_avonva <- aov(`Percentage of Unemployment in USA` ~ state_area, data = data_grouped_by_year_state)
 
+summary(one_way_avonva)
+
+
+
+```
+
+```{r include=FALSE}
+
+data_prep <- data_grouped_by_year_state %>% 
+  filter(year == 2022)
+
+data_prep <- data_prep %>% 
+  remove_rownames() %>% 
+  column_to_rownames(var = "state_area") %>% 
+  select(-year)
+
+
+#scale data
+data_scaled = scale(data_prep)
+
+#für mixed Daten auf Basis der euklydischen Distanz
+data_mixed <- daisy(data_scaled, metric='euclidean', stand = FALSE)
+```
+
+
+```{r}
+cluster_object <- hclust(data_mixed, method = "ward.D")
+
+plot(cluster_object, main="Baumdiagramm")
+rect.hclust(as.hclust(cluster_object), k=4, border="red") # Clusteranzahl k anpassen
+```
+```{r}
+multi.clust <- data.frame(k = 1:6) %>% group_by(k) %>% do(clust = kmeans(data_prep, .$k))
+sumsq.clust <- multi.clust %>% group_by(k) %>% do(glance(.$clust[[1]]))
+
+ggplot(sumsq.clust, aes(k, tot.withinss)) + geom_line() + geom_point()
+```
+
+```{r}
+p.cluster <- data_prep %>% kmeans(., 2) #mit kmeans wird Anzahl Cluster definiert
+p.cluster$cluster <- as.factor(p.cluster$cluster)
+
+data_prep %>% 
+  ggplot(aes(`Total non-institutional Population (USA)`,`Percentage of Unemployment in USA`, label = rownames(data_prep))) + 
+  scale_fill_discrete(name = "Cluster") + 
+  geom_label(aes(fill = p.cluster$cluster), colour = "white", 
+  fontface = "bold", size=2)
+```
+```{r}
+multi.clust <- data.frame(k = 1:6) %>% group_by(k) %>% do(clust = kmeans(data_prep, .$k))
+multi.k <- multi.clust %>% group_by(k) %>% do(augment(.$clust[[1]], data_prep))
+
+multi.k %>% 
+  ggplot(aes(`Total non-institutional Population (USA)`, `Percentage of Unemployment in USA`)) + geom_point(aes(color = .cluster)) + 
+  facet_wrap(~k)
+```
 
