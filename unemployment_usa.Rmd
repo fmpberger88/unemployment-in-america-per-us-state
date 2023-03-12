@@ -14,13 +14,17 @@ editor_options:
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
-## Inspection of the data
+## Unemployment in America, Per US State
+
+### Inspection of the data
 
 This dataset contains relevant statistics and employment rates per US state since 1976.
 
 Data is availabe at: [Kaggle](https://www.kaggle.com/datasets/justin2028/unemployment-in-america-per-us-state?resource=download)
 
 According to the description on the website, the dataset from *Kaggle* does not contain any missing values. The data was briefly checked for any missing and infinitive values.
+
+After EDA, a Clusteranalysis was conducted. 
 
 ```{r loading}
 #load packages
@@ -277,7 +281,7 @@ ggplot(sumsq.clust, aes(k, tot.withinss)) + geom_line() + geom_point()
 ```
 
 ```{r}
-p.cluster <- data_prep %>% kmeans(., 4) #mit kmeans wird Anzahl Cluster definiert
+p.cluster <- data_prep %>% kmeans(., 2) #mit kmeans wird Anzahl Cluster definiert
 p.cluster$cluster <- as.factor(p.cluster$cluster)
 
 data_prep %>% 
