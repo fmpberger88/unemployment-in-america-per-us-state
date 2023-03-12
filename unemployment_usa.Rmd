@@ -42,7 +42,7 @@ library(broom)
 
 #load data from 
 data <- read_csv('Unemp_usa.csv')
-county_demo_18 <-read_csv('ACSST5Y2018.S0101-Data.csv')
+
 
 
 glimpse(data)
@@ -246,10 +246,10 @@ summary(one_way_avonva)
 
 ```{r include=FALSE}
 
-data_prep <- data_grouped_by_year_state %>% 
+data_input <- data_grouped_by_year_state %>% 
   filter(year == 2022)
 
-data_prep <- data_prep %>% 
+data_prep <- data_input %>% 
   remove_rownames() %>% 
   column_to_rownames(var = "state_area") %>% 
   select(-year)
@@ -277,7 +277,7 @@ ggplot(sumsq.clust, aes(k, tot.withinss)) + geom_line() + geom_point()
 ```
 
 ```{r}
-p.cluster <- data_prep %>% kmeans(., 2) #mit kmeans wird Anzahl Cluster definiert
+p.cluster <- data_prep %>% kmeans(., 4) #mit kmeans wird Anzahl Cluster definiert
 p.cluster$cluster <- as.factor(p.cluster$cluster)
 
 data_prep %>% 
@@ -293,5 +293,39 @@ multi.k <- multi.clust %>% group_by(k) %>% do(augment(.$clust[[1]], data_prep))
 multi.k %>% 
   ggplot(aes(`Total non-institutional Population (USA)`, `Percentage of Unemployment in USA`)) + geom_point(aes(color = .cluster)) + 
   facet_wrap(~k)
+```
+```{r}
+cluster_state <- cbind(data_prep, cluster = as.numeric(p.cluster$cluster))
+
+cluster_state <-round(cluster_state %>% 
+        group_by(cluster))
+        
+        
+cluster_state %>%
+  summarise(mean_pop = mean(`Total non-institutional Population (USA)`),
+            mean_unemp = mean(`Percentage of Unemployment in USA`)
+  )
+            
+```
+
+```{r}
+ttest <- t.test(cluster_state$`Percentage of Unemployment in USA` ~ cluster_state$cluster, var.equal= FALSE, alternative = "two.sided")
+
+summary(one_way_avonva)
+```
+
+```{r}
+one_way_avonva <- aov(`Percentage of Unemployment in USA` ~ cluster, data = cluster_state)
+
+summary(one_way_avonva)
+```
+```{r}
+data_input %>% 
+  ggplot(aes(x=`Total non-institutional Population (USA)`,y=`Percentage of Unemployment in USA`))+
+  geom_point()
+```
+
+```{r}
+cor.test(data_input$`Total non-institutional Population (USA)`, data_input$`Percentage of Unemployment in USA`, method = "pearson")
 ```
 
